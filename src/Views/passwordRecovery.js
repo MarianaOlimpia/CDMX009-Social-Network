@@ -8,7 +8,7 @@ export default () => {
               <h1>Recupera tu contraseña</h1>
               <p>Te enviaremos un correo electrónico para recuperar tu contraseña</p>
               <form class="recoveryForm">
-                  <input type="email" required id="loginMail" placeholder= "Correo electrónico">
+                  <input type="email" required id="loginMail" placeholder="Correo electrónico">
                   <button type="submit" class="registerButton" id="loginButton">ENVIAR</button>
               </form> 
               <div class="conectWithSocialMedia">

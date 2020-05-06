@@ -4,8 +4,11 @@ export default () => {
   const loginView = document.createElement('div');
   loginView.setAttribute('class', 'viewsStyle');
   loginView.innerHTML = ` 
-            <center><h3>Inicia Sesión con tu email</h3></center>
+            <div class="h3-center">
+            <h3>Inicia Sesión con tu email</h3> 
+            </div>
             <form class="registerForm">
+                
                 <input type="email" required id="loginEmail" placeholder= "Correo electrónico">
                 <input type="password" required id="loginPassword" minlength="6" placeholder="Contraseña">
                 <button type="submit" class="registerButton" id="loginButton">INICIAR SESIÓN</button>

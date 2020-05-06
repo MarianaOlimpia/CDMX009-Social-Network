@@ -1,5 +1,3 @@
-/* eslint-disable no-console */
-/* eslint-disable no-alert */
 export const database = firebase.firestore();
 
 export default {
@@ -7,7 +5,6 @@ export default {
     const provider = new firebase.auth.GoogleAuthProvider();
     firebase.auth().signInWithPopup(provider)
       .then(() => {
-        // const user = result.user;
         const currentUser = firebase.auth().currentUser;
         database.collection('users').doc(currentUser.uid).set({
           id: currentUser.uid,
@@ -22,9 +19,7 @@ export default {
     const provider = new firebase.auth.FacebookAuthProvider();
     firebase.auth().signInWithPopup(provider)
       .then(() => {
-      // const user = result.user;
         const currentUser = firebase.auth().currentUser;
-        console.log(currentUser);
         database.collection('users').doc(currentUser.uid).set({
           id: currentUser.uid,
           name: currentUser.displayName,
@@ -37,7 +32,6 @@ export default {
   emailRegister: (mail, password) => {
     firebase.auth().createUserWithEmailAndPassword(mail, password)
       .then(() => {
-      // const user = result.user;
         const currentUser = firebase.auth().currentUser;
         console.log(currentUser);
         database.collection('users').doc(currentUser.uid).set({

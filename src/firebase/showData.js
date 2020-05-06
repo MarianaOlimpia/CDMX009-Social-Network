@@ -1,4 +1,3 @@
-/* eslint-disable no-alert */
 /* eslint-disable no-param-reassign */
 import { database } from './login.js';
 
@@ -6,12 +5,10 @@ import { database } from './login.js';
 
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
-    console.log(user);
     localStorage.setItem('uid', user.uid);
     localStorage.setItem('displayName', user.displayName);
     localStorage.setItem('photoURL', user.photoURL);
   } else {
-    console.log('No user is signed in');
     localStorage.removeItem('uid');
     localStorage.removeItem('displayName');
     localStorage.removeItem('photoURL');
@@ -49,9 +46,7 @@ const editPost = (event) => {
   const btnEdit = document.querySelector('#submitEditPost');
   btnEdit.addEventListener('click', () => {
     const postsRef = database.collection('posts').doc(event.target.id);
-    console.log(event.target.id);
-    const newContent = document.querySelector('#newTextPost').value;
-    console.log(newContent);
+    const newContent = document.querySelector('#editPostText').value;
     return postsRef.update({
       postContent: newContent,
     })
@@ -110,14 +105,11 @@ export const postTemplate = (templateContainer) => {
 // obtener post propios
 export const currentUserPosts = (postContainer) => {
   postContainer.innerHTML = '';
-  // const prueba = localStorage.getItem('uid');
-  // console.log(prueba);
   const currentUserRef = database.collection('posts');
-  const query = currentUserRef.where('postOwner', '==', localStorage.getItem('uid'));
-  query.get()
+  const getPosts = currentUserRef.where('postOwner', '==', localStorage.getItem('uid'));
+  getPosts.get()
     .then((querySnapshot) => {
       querySnapshot.forEach((doc) => {
-        // doc.data() is never undefined for query doc snapshots
         const timestampFormat = doc.data().date.seconds;
         const newDateFormat = dateConverter(timestampFormat);
         const userTemplate = `
@@ -146,6 +138,6 @@ export const currentUserPosts = (postContainer) => {
       });
     })
     .catch((error) => {
-      console.log('Error getting documents: ', error);
+      alert('Error getting documents: ', error);
     });
 };

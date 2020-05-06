@@ -144,8 +144,7 @@ hr {width: 90%; border-color: rgb(47, 141, 218);}
             height: 4rem;
         }
         .postContent {
-            width: 85%; 
-            height: auto;
+            width: 85%;             
             padding: 0.3rem; 
         }
         #date {
@@ -240,4 +239,9 @@ textarea {
     border-radius: 1rem;
     border: 0.15rem solid rgb(0, 1, 41);
     font-weight: bolder;
+}
+
+.h3-center {
+    justify-content: center;
+    display: flex;
 }
