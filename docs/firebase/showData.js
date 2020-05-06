@@ -3,25 +3,21 @@
 /* eslint-disable no-param-reassign */
 import { database } from './login.js';
 
-export const userAccess = (username, photo) => {
-  firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-      const userId = firebase.auth().currentUser.uid;
-      database.collection('users').where('id', '==', userId)
-        .get()
-        .then((querySnapshot) => {
-          querySnapshot.forEach((doc) => {
-            username.textContent = doc.data().name;
-            photo.src = doc.data().photo;
-            // console.log(`${doc.id} => ${doc.data().email}`);
-          });
-        });
-      // console.log(user);
-    } else {
-      console.log('No user is signed in');
-    }
-  });
-};
+// const storage = firebase.storage();
+
+firebase.auth().onAuthStateChanged((user) => {
+  if (user) {
+    console.log(user);
+    localStorage.setItem('uid', user.uid);
+    localStorage.setItem('displayName', user.displayName);
+    localStorage.setItem('photoURL', user.photoURL);
+  } else {
+    console.log('No user is signed in');
+    localStorage.removeItem('uid');
+    localStorage.removeItem('displayName');
+    localStorage.removeItem('photoURL');
+  }
+});
 
 const dateConverter = (timeStampFormat) => {
   const date = new Date(timeStampFormat * 1000);
@@ -33,35 +29,41 @@ const dateConverter = (timeStampFormat) => {
   return (`${day}-${month}-${year} / ${hour}:${minute}`);
 };
 
-export const postTemplate = (templateContainer) => {
-  database.collection('posts').get().then((querySnapshot) => {
-    const docRef = database.collection('posts');
-    docRef.orderBy('date', 'desc');
-    querySnapshot.forEach((doc) => {
-      // doc.data() is never undefined for query doc snapshots
-      // console.log(doc.id, ' => ', doc.data());
-      const timestampFormat = doc.data().date.seconds;
-      const newDateFormat = dateConverter(timestampFormat);
-      const userTemplate = `
-        <hr>
-        <div class="postContainer">
-          <div class="post">
-              <img src="${doc.data().postPhotoOwner}" alt="Profile" class="postAuthor">
-              <div class="postContent">
-                <span id="ownerName">${doc.data().postNameOwner}</span><br>
-                <span id="contentMessage">${doc.data().postContent}</span><br>
-                <span id="date">${newDateFormat}</span>
-              </div>
-          </div>
-          <div class="postOptions">
-              <div class="likes">00</div>
-              <img src="images/corazon (1).svg" class="likes" alt="like">
-              <input type="button" class="delete" value="Modificar">
-              <input type="button" class="delete" value="Eliminar">
-          </div>
-        </div>`;
-      templateContainer.innerHTML += userTemplate;
+const deleteOption = (event) => {
+  database.collection('posts').doc(event.target.id).delete()
+    .then(() => {
+      alert('Document successfully deleted!');
+    })
+    .catch((error) => {
+      alert('Error removing document: ', error);
     });
+};
+
+const editPost = (event) => {
+  const modalEdit = document.querySelector('#modalEdit');
+  document.querySelector('#modalEdit').style.display = 'block';
+  const closeBtn = document.querySelector('#closeBtn');
+  closeBtn.addEventListener('click', () => {
+    modalEdit.style.display = 'none';
+  });
+  document.querySelector('#editPostText').value = event.target.getAttribute('data-content');
+  const btnEdit = document.querySelector('#submitEditPost');
+  btnEdit.addEventListener('click', () => {
+    const postsRef = database.collection('posts').doc(event.target.id);
+    console.log(event.target.id);
+    const newContent = document.querySelector('#newTextPost').value;
+    console.log(newContent);
+    return postsRef.update({
+      postContent: newContent,
+    })
+      .then(() => {
+        alert('Document successfully updated!');
+        document.querySelector('#modalEdit').style.display = 'none';
+      })
+      .catch((error) => {
+        // The document probably doesn't exist.
+        console.error('Error updating document: ', error);
+      });
   });
 };
 
@@ -72,7 +74,7 @@ export const createNewPost = (content) => {
     postNameOwner: currentUserData.displayName,
     postPhotoOwner: currentUserData.photoURL,
     postContent: content,
-    date: firebase.firestore.FieldValue.serverTimestamp(),
+    date: new Date(),
     likes: {},
   })
     .then(() => {
@@ -80,14 +82,71 @@ export const createNewPost = (content) => {
     });
 };
 
-// const deletePost = (deletebtn) => {
-//   database.collection('posts').where('postOwner', '==', currentUserData.uid).delete()
-//     .then(() => {
-//       const deletebtn = document.querySelector('.delete');
-//       deletebtn.appendChild
-//       console.log('Document successfully deleted!');
-//     })
-//     .catch((error) => {
-//       console.error('Error removing document: ', error);
-//     });
-// };
+export const postTemplate = (templateContainer) => {
+  database.collection('posts').onSnapshot((querySnapshot) => {
+    templateContainer.innerHTML = '';
+    querySnapshot.forEach((doc) => {
+      const timestampFormat = doc.data().date.seconds;
+      const newDateFormat = dateConverter(timestampFormat);
+      const userTemplate = `
+        <div class="postContainer">
+          <div class="post">
+              <img src="${doc.data().postPhotoOwner}" alt="Profile" class="postAuthor">
+              <div class="postContent">
+                <span id="ownerName">${doc.data().postNameOwner}</span><br>
+                <span id="contentMessage" class="content">${doc.data().postContent}</span><br>
+                <span id="date">${newDateFormat}</span>
+              </div>
+          </div>
+          <div class="postOptions">
+              <div class="likes">00</div>
+              <img src="images/corazon (1).svg" class="likes" alt="like">
+          </div>
+        </div>`;
+      templateContainer.innerHTML += userTemplate;
+    });
+  });
+};
+
+// obtener post propios
+export const currentUserPosts = (postContainer) => {
+  postContainer.innerHTML = '';
+  // const prueba = localStorage.getItem('uid');
+  // console.log(prueba);
+  const currentUserRef = database.collection('posts');
+  const query = currentUserRef.where('postOwner', '==', localStorage.getItem('uid'));
+  query.get()
+    .then((querySnapshot) => {
+      querySnapshot.forEach((doc) => {
+        // doc.data() is never undefined for query doc snapshots
+        const timestampFormat = doc.data().date.seconds;
+        const newDateFormat = dateConverter(timestampFormat);
+        const userTemplate = `
+          <div class="postContainer">
+            <div class="post">
+                <img src="${doc.data().postPhotoOwner}" alt="Profile" class="postAuthor">
+                <div class="postContent">
+                  <span id="ownerName">${doc.data().postNameOwner}</span><br>
+                  <span id="contentMessage" class="content">${doc.data().postContent}</span><br>
+                  <span id="date">${newDateFormat}</span>
+                </div>
+            </div>
+            <div class="postOptions">
+                <div class="likes">00</div>
+                <img src="images/corazon (1).svg" class="likes" alt="like">
+                <img src="images/rectification.svg" class="edit likes" id="${doc.id}" alt="Editar" data-content="${doc.data().postContent}">
+                <img src="images/borrar.svg" class="delete likes" id="${doc.id}" alt="Eliminar">
+            </div>
+          </div>`;
+        postContainer.innerHTML += userTemplate;
+        const DeleteBtns = postContainer.querySelectorAll('.delete');
+        DeleteBtns.forEach(btn => btn.addEventListener('click', deleteOption));
+
+        const btn = postContainer.querySelectorAll('.edit');
+        btn.forEach(bt => bt.addEventListener('click', editPost));
+      });
+    })
+    .catch((error) => {
+      console.log('Error getting documents: ', error);
+    });
+};

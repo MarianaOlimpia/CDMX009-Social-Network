@@ -9,7 +9,6 @@ export default {
       .then(() => {
         // const user = result.user;
         const currentUser = firebase.auth().currentUser;
-        console.log(currentUser);
         database.collection('users').doc(currentUser.uid).set({
           id: currentUser.uid,
           name: currentUser.displayName,
@@ -87,6 +86,7 @@ export default {
     firebase.auth().signOut()
       .then(() => {
         alert('Sesión cerrada');
+        document.querySelector('header').style.display = '';
         window.location.hash = '#/login';
       }).catch(() => {
         alert('Algo salió mal. Intente de nuevo');
